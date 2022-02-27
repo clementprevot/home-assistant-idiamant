@@ -1,0 +1,10 @@
+{
+  "domain": "idiamant",
+  "name": "iDiamant",
+  "documentation": "https://github.com/clementprevot/idiamant",
+  "issue_tracker": "https://github.com/clementprevot/idiamant/issues",
+  "dependencies": [],
+  "config_flow": true,
+  "codeowners": ["@clementprevot"],
+  "requirements": []
+}
