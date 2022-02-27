@@ -5,8 +5,8 @@
   "iot_class": "cloud_polling",
   "name": "iDiamant",
   "config_flow": true,
-  "documentation": "https://github.com/clementprevot/idiamant",
-  "issue_tracker": "https://github.com/clementprevot/idiamant/issues",
+  "documentation": "https://github.com/clementprevot/home-assistant-idiamant",
+  "issue_tracker": "https://github.com/clementprevot/home-assistant-idiamant/issues",
   "dependencies": [],
   "requirements": []
 }

@@ -4,5 +4,9 @@ logger:
   default: info
   logs:
     custom_components.idiamant: debug
-# If you need to debug uncomment the line below (doc: https://www.home-assistant.io/integrations/debugpy/)
-# debugpy:
+
+debugpy:
+
+idiamant:
+  client_id: "<ENTER YOUR CLIENT ID>"
+  client_secret: "<ENTER YOUR CLIENT SECRET>"

@@ -1,36 +1,49 @@
-"""IdiamantEntity class"""
+"""
+Entity class for iDiamant.
+"""
+
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION
-from .const import DOMAIN
-from .const import NAME
-from .const import VERSION
+from .const import DOMAIN, NAME, VERSION, MANUFACTURER
 
 
 class IdiamantEntity(CoordinatorEntity):
+    """
+    The main iDiamant entity class.
+    """
+
     def __init__(self, coordinator, config_entry):
         super().__init__(coordinator)
         self.config_entry = config_entry
 
     @property
     def unique_id(self):
-        """Return a unique ID to use for this entity."""
+        """
+        Return a unique ID to use for this entity.
+        """
+
         return self.config_entry.entry_id
 
     @property
     def device_info(self):
+        """
+        Return the device information.
+        """
+
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
-            "name": NAME,
+            "manufacturer": MANUFACTURER,
             "model": VERSION,
-            "manufacturer": NAME,
+            "name": NAME,
         }
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes."""
+        """
+        Return the state attributes.
+        """
+
         return {
-            "attribution": ATTRIBUTION,
             "id": str(self.coordinator.data.get("id")),
             "integration": DOMAIN,
         }

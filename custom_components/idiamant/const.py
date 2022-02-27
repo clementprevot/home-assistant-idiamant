@@ -1,41 +1,55 @@
-"""Constants for iDiamant."""
-# Base component constants
+"""Constants used by the iDiamant component."""
+from homeassistant.const import Platform
+
 NAME = "iDiamant"
+VERSION = "0.0.1"
 DOMAIN = "idiamant"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.0.1"
 
-ATTRIBUTION = "Data provided by http://jsonplaceholder.typicode.com/"
-ISSUE_URL = "https://github.com/clementprevot/idiamant/issues"
+MANUFACTURER = "Netatmo"
+DEFAULT_ATTRIBUTION = f"Data provided by {MANUFACTURER}"
 
-# Icons
-ICON = "mdi:format-quote-close"
+PLATFORMS = [
+    Platform.COVER,
+    Platform.SENSOR,
+]
 
-# Device classes
-BINARY_SENSOR_DEVICE_CLASS = "connectivity"
+BASE_API_URL = "https://api.netatmo.com"
+API_PATH = "/api"
 
-# Platforms
-BINARY_SENSOR = "binary_sensor"
-SENSOR = "sensor"
-SWITCH = "switch"
-PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH]
+TIMEOUT = 10
 
+ACCEPT_HEADER = "Accept"
+ACCEPT_HEADER_JSON = "application/json"
+AUTHORIZATION_HEADER = "Authorization"
+AUTHORIZATION_HEADER_BEARER = "Bearer"
+DEFAULT_HEADERS = {ACCEPT_HEADER: ACCEPT_HEADER_JSON}
 
-# Configuration and options
-CONF_ENABLED = "enabled"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
+OAUTH2_PATH = "/oauth2"
+OAUTH2_AUTHORIZE_URL = BASE_API_URL + OAUTH2_PATH + "/authorize"
+OAUTH2_TOKEN_URL = BASE_API_URL + OAUTH2_PATH + "/token"
 
-# Defaults
-DEFAULT_NAME = DOMAIN
+SCOPES = [
+    "read_bubendorff",
+    "write_bubendorff",
+]
 
+MODEL_NBG = "Gateway"
+MODEL_NBR = "Rolling shutter"
+MODEL_NBO = "Orientable shutter"
+MODEL_NBS = "Swinging shutter"
 
-STARTUP_MESSAGE = f"""
--------------------------------------------------------------------
-{NAME}
-Version: {VERSION}
-This is a custom integration!
-If you have any issues with this you need to open an issue here:
-{ISSUE_URL}
--------------------------------------------------------------------
-"""
+MODELS = {
+    "NBG": MODEL_NBG,
+    "NBR": MODEL_NBR,
+    "NBO": MODEL_NBO,
+    "NBS": MODEL_NBS,
+}
+
+TYPE_SECURITY = "security"
+
+AUTH = "idiamant_auth"
+
+DATA_HOMES = ("idiamant_homes",)
+DATA_ROOMS = ("idiamant_rooms",)
+DATA_MODULES = ("idiamant_modules",)

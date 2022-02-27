@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "iDiamant",
-        "description": "If you need help with the configuration have a look here: https://github.com/clementprevot/idiamant",
+        "description": "If you need help with the configuration have a look here: https://github.com/clementprevot/home-assistant-idiamant",
         "data": {
           "username": "Username",
           "password": "Password"
@@ -12,9 +12,6 @@
     },
     "error": {
       "auth": "Username/Password is wrong."
-    },
-    "abort": {
-      "single_instance_allowed": "Only a single instance is allowed."
     }
   },
   "options": {
@@ -23,7 +20,7 @@
         "data": {
           "binary_sensor": "Binary sensor enabled",
           "sensor": "Sensor enabled",
-          "switch": "Switch enabled"
+          "cover": "Cover enabled"
         }
       }
     }

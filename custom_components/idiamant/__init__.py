@@ -1,110 +1,162 @@
 """
-Custom integration to integrate iDiamant with Home Assistant.
+The iDiamant by Netatmo integration.
 
 For more details about this integration, please refer to
-https://github.com/clementprevot/idiamant
+https://github.com/clementprevot/home-assistant-idiamant
 """
-import asyncio
-import logging
+
+from __future__ import annotations
+
 from datetime import timedelta
+from http import HTTPStatus
+import logging
+
+import aiohttp
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .api import IdiamantApiClient
-from .const import CONF_PASSWORD
-from .const import CONF_USERNAME
-from .const import DOMAIN
-from .const import PLATFORMS
-from .const import STARTUP_MESSAGE
+from . import api, config_flow
+from .const import (
+    AUTH,
+    DATA_HOMES,
+    DATA_MODULES,
+    DATA_ROOMS,
+    DOMAIN,
+    OAUTH2_AUTHORIZE_URL,
+    OAUTH2_TOKEN_URL,
+    PLATFORMS,
+    SCOPES,
+    TYPE_SECURITY,
+)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_CLIENT_ID): cv.string,
+                vol.Required(CONF_CLIENT_SECRET): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-async def async_setup(hass: HomeAssistant, config: Config):
-    """Set up this integration using YAML is not supported."""
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """
+    Set up the iDiamant component.
+    """
+
+    hass.data[DOMAIN] = {
+        DATA_HOMES: {},
+        DATA_ROOMS: {},
+        DATA_MODULES: {},
+    }
+
+    if DOMAIN not in config:
+        return True
+
+    config_flow.IDiamantFlowHandler.async_register_implementation(
+        hass,
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass,
+            DOMAIN,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            OAUTH2_AUTHORIZE_URL,
+            OAUTH2_TOKEN_URL,
+        ),
+    )
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up this integration using UI."""
-    if hass.data.get(DOMAIN) is None:
-        hass.data.setdefault(DOMAIN, {})
-        _LOGGER.info(STARTUP_MESSAGE)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """
+    Set up iDiamant from a config entry.
+    """
 
-    username = entry.data.get(CONF_USERNAME)
-    password = entry.data.get(CONF_PASSWORD)
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+    )
 
-    session = async_get_clientsession(hass)
-    client = IdiamantApiClient(username, password, session)
+    # Set unique id if non was set.
+    if not entry.unique_id:
+        hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
-    coordinator = IdiamantDataUpdateCoordinator(hass, client=client)
-    await coordinator.async_refresh()
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    try:
+        await session.async_ensure_token_valid()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    except aiohttp.ClientResponseError as ex:
+        _LOGGER.debug("API error: %s (%s)", ex.code, ex.message)
 
-    for platform in PLATFORMS:
-        if entry.options.get(platform, True):
-            coordinator.platforms.append(platform)
-            hass.async_add_job(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
+        if ex.code in (
+            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.UNAUTHORIZED,
+            HTTPStatus.FORBIDDEN,
+        ):
+            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
 
-    entry.add_update_listener(async_reload_entry)
-    return True
+        raise ConfigEntryNotReady from ex
+
+    if sorted(session.token["scope"]) != sorted(SCOPES):
+        _LOGGER.debug("Scopes are invalids: %s != %s", session.token["scope"], SCOPES)
+
+        raise ConfigEntryAuthFailed("Token scopes not valid, trigger renewal")
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        AUTH: api.AsyncConfigEntryNetatmoAuth(
+            aiohttp_client.async_get_clientsession(hass), session
+        )
+    }
+
+    # data_handler = NetatmoDataHandler(hass, entry)
+    # await data_handler.async_setup()
+    # hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
 
-class IdiamantDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching data from the API."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        client: IdiamantApiClient,
-    ) -> None:
-        """Initialize."""
-        self.api = client
-        self.platforms = []
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-
-    async def _async_update_data(self):
-        """Update data via library."""
-        try:
-            return await self.api.async_get_data()
-        except Exception as exception:
-            raise UpdateFailed() from exception
+async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """
+    Handle signals of config entry being updated.
+    """
+    async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Handle removal of an entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    unloaded = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-                if platform in coordinator.platforms
-            ]
-        )
-    )
-    if unloaded:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    """
+    Unload a config entry.
+    """
+    data = hass.data[DOMAIN]
 
-    return unloaded
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
+    if unload_ok and entry.entry_id in data:
+        data.pop(entry.entry_id)
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload config entry."""
-    await async_unload_entry(hass, entry)
-    await async_setup_entry(hass, entry)
+    return unload_ok

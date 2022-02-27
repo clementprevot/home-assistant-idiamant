@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "iDiamant",
-        "description": "Si vous avez besoin d'aide pour la configuration, regardez ici: https://github.com/clementprevot/idiamant",
+        "description": "Si vous avez besoin d'aide pour la configuration, regardez ici: https://github.com/clementprevot/home-assistant-idiamant",
         "data": {
           "username": "Identifiant",
           "password": "Mot de Passe"
@@ -12,9 +12,6 @@
     },
     "error": {
       "auth": "Identifiant ou mot de passe erroné."
-    },
-    "abort": {
-      "single_instance_allowed": "Une seule instance est autorisée."
     }
   },
   "options": {
@@ -23,7 +20,7 @@
         "data": {
           "binary_sensor": "Capteur binaire activé",
           "sensor": "Capteur activé",
-          "switch": "Interrupteur activé"
+          "cover": "Volet activé"
         }
       }
     }
