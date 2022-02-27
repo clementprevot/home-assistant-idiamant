@@ -1,0 +1,12 @@
+{
+  "codeowners": ["@clementprevot"],
+  "version": "0.0.1",
+  "domain": "idiamant",
+  "iot_class": "cloud_polling",
+  "name": "iDiamant",
+  "config_flow": true,
+  "documentation": "https://github.com/clementprevot/idiamant",
+  "issue_tracker": "https://github.com/clementprevot/idiamant/issues",
+  "dependencies": [],
+  "requirements": []
+}

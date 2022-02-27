@@ -1,0 +1,6 @@
+{
+  "name": "iDiamant by Netatmo",
+  "domains": ["cover", "sensor"],
+  "iot_class": "Cloud Polling",
+  "render_readme": true
+}

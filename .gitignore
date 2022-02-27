@@ -1,0 +1,33 @@
+# Misc
+# MacOS
+**/*.DS_Store
+
+# Logs
+**/logs
+**/*.log
+
+# Local testing
+*.tgz
+
+# Coverage of tests
+**/coverage
+
+# IDE
+**/.idea
+**/*.ntvs*
+**/*.njsproj
+**/*.sln
+**/*.sw?
+**/.vscode/*
+**/*.code-workspace
+# Let's keep the extensions.json file because it references all the recommended
+# extensions for this workspace. That way, newcomers will receive suggestions.
+!.vscode/extensions.json
+
+# Python
+__pycache__
+pythonenv*
+.python-version
+.coverage
+venv
+.venv

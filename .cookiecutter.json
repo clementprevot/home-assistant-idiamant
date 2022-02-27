@@ -1,0 +1,10 @@
+{
+  "_template": "git@github.com:oncleben31/cookiecutter-homeassistant-custom-component.git",
+  "class_name_prefix": "Idiamant",
+  "domain_name": "idiamant",
+  "friendly_name": "iDiamant by Netatmo",
+  "github_user": "clementprevot",
+  "project_name": "home-assistant-idiamant",
+  "test_suite": "yes",
+  "version": "0.0.1"
+}
