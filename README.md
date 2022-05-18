@@ -1,3 +1,5 @@
+# This integration is not ready yet!
+
 # iDiamant by Netatmo - Home Assistant custom integration
 
 [![GitHub Release][releases-shield]][releases]
